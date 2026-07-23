@@ -1,0 +1,141 @@
+using UnityEngine;
+
+namespace T60.StateMachine
+{
+    /// <summary>
+    /// MonoBehaviour host for running the T60 Match State Machine.
+    /// Attach this script to a GameObject in your Unity Scene.
+    /// </summary>
+    public class MatchStateMachineRunner : MonoBehaviour
+    {
+        public StateMachine StateMachine { get; private set; }
+        public MatchContext Context { get; private set; }
+
+        [Header("Read-Only Debug Info")]
+        [SerializeField] private string currentStateName;
+        [SerializeField] private float mainClockSeconds;
+        [SerializeField] private float turnClockSeconds;
+        [SerializeField] private int activePlayer;
+        [SerializeField] private bool reflexActive;
+
+        private void Awake()
+        {
+            Context = new MatchContext();
+            StateMachine = new StateMachine();
+        }
+
+        private void Start()
+        {
+            // Start match by entering setup state
+            StateMachine.Initialize(new MatchSetupState(this, Context));
+        }
+
+        private void Update()
+        {
+            // Tick state machine frame-by-frame
+            StateMachine?.Update();
+
+            // Sync debug values for Inspector visibility
+            if (StateMachine?.CurrentState != null)
+            {
+                currentStateName = StateMachine.CurrentState.GetType().Name;
+            }
+            if (Context != null)
+            {
+                mainClockSeconds = Context.MainClockSeconds;
+                turnClockSeconds = Context.TurnClockSeconds;
+                activePlayer = Context.ActivePlayerIndex + 1;
+                reflexActive = Context.ReflexWindowActive;
+            }
+        }
+
+        #region Helper Trigger Methods for UI / Testing
+
+        /// <summary>
+        /// Simulates playing a standard card (e.g. Coolant Flush or Power Surge)
+        /// </summary>
+        public void TestPlayCard(string cardName, float clockTimeDelta)
+        {
+            if (StateMachine.CurrentState is PlayerTurnState playerTurnState)
+            {
+                playerTurnState.PlayCard(cardName, clockTimeDelta);
+            }
+            else
+            {
+                Debug.LogWarning($"[Runner] Cannot play normal card '{cardName}' outside of PlayerTurnState!");
+            }
+        }
+
+        /// <summary>
+        /// Simulates playing a Reflex Card when Main Clock hits zero.
+        /// </summary>
+        public void TestPlayReflexCard(string reflexCardName, float addedSeconds = 15f)
+        {
+            if (StateMachine.CurrentState is ReflexWindowState reflexState)
+            {
+                reflexState.PlayReflexCard(reflexCardName, addedSeconds);
+            }
+            else
+            {
+                Debug.LogWarning($"[Runner] Cannot play Reflex card '{reflexCardName}' unless in ReflexWindowState!");
+            }
+        }
+
+        /// <summary>
+        /// Restarts the match state machine.
+        /// </summary>
+        public void RestartMatch()
+        {
+            StateMachine.ChangeState(new MatchSetupState(this, Context));
+        }
+
+        #endregion
+
+        private void OnGUI()
+        {
+            // Simple OnGUI overlay to visualize & test in Unity Editor without setting up UI canvases
+            GUILayout.BeginArea(new Rect(20, 20, 320, 300), "T60 State Machine Debug", GUI.skin.window);
+            
+            GUILayout.Label($"Current State: {currentStateName}");
+            GUILayout.Label($"Active Player: Player {activePlayer}");
+            GUILayout.Label($"Main Clock: {mainClockSeconds:F2}s");
+            GUILayout.Label($"Turn Clock: {turnClockSeconds:F2}s");
+
+            if (Context != null && Context.MatchOver)
+            {
+                GUILayout.Label($"GAME OVER! Winner: Player {Context.WinnerPlayerIndex + 1}");
+                if (GUILayout.Button("Restart Match"))
+                {
+                    RestartMatch();
+                }
+            }
+            else if (StateMachine?.CurrentState is ReflexWindowState)
+            {
+                GUI.color = Color.red;
+                GUILayout.Label("!!! MAIN CLOCK AT ZERO !!!");
+                GUI.color = Color.white;
+                if (GUILayout.Button("Play Reflex Card (Emergency Vent +15s)"))
+                {
+                    TestPlayReflexCard("Emergency Vent", 15f);
+                }
+            }
+            else if (StateMachine?.CurrentState is PlayerTurnState)
+            {
+                if (GUILayout.Button("Play Coolant Flush (+20s Main Clock)"))
+                {
+                    TestPlayCard("Coolant Flush", +20f);
+                }
+                if (GUILayout.Button("Play Power Surge (-15s Main Clock)"))
+                {
+                    TestPlayCard("Power Surge", -15f);
+                }
+                if (GUILayout.Button("Play Neutral Card (0s Shift)"))
+                {
+                    TestPlayCard("Neutral Protocol", 0f);
+                }
+            }
+
+            GUILayout.EndArea();
+        }
+    }
+}
