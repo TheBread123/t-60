@@ -15,7 +15,14 @@ namespace T60.Cards
                 return;
             }
 
-            cards[index].CardEffect(context);
+            if (cards[index] != null)
+            {
+                cards[index].Play(context);
+            }
+            else
+            {
+                Debug.LogWarning($"[Hand] Card at index {index} is null.");
+            }
         }
     }
 }
