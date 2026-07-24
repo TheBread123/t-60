@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace T60.Pooling
 {
-    /// <summary>
-    /// Global manager and coordinator for all GameObject object pools.
-    /// Access via singleton instance or static convenience API methods.
-    /// </summary>
     public class ObjectPoolManager : MonoBehaviour
     {
         public static ObjectPoolManager Instance { get; private set; }
@@ -54,20 +50,12 @@ namespace T60.Pooling
             }
         }
 
-        /// <summary>
-        /// Retrieves the existing pool for a given prefab or creates a new one.
-        /// </summary>
         public Pool GetOrCreatePool(GameObject prefab, int prewarmCount = 0)
         {
-            if (prefab == null)
-            {
-                Debug.LogError("[ObjectPoolManager] Cannot create or retrieve pool for a null prefab!");
-                return null;
-            }
+            if (prefab == null) return null;
 
             if (!_poolsByPrefab.TryGetValue(prefab, out Pool pool))
             {
-                // Create a sub-parent transform in the hierarchy for clean organization
                 GameObject poolRoot = new GameObject($"Pool_{prefab.name}");
                 poolRoot.transform.SetParent(transform, false);
 
@@ -82,35 +70,20 @@ namespace T60.Pooling
             return pool;
         }
 
-        #region Spawning & Despawning API
-
-        /// <summary>
-        /// Spawns an object from the specified prefab's pool.
-        /// </summary>
         public GameObject Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent = null)
         {
             Pool pool = GetOrCreatePool(prefab);
             return pool?.Spawn(position, rotation, parent);
         }
 
-        /// <summary>
-        /// Spawns an object from the specified prefab's pool and returns a specific Component type.
-        /// </summary>
         public T Spawn<T>(T prefabComponent, Vector3 position, Quaternion rotation, Transform parent = null) where T : Component
         {
-            if (prefabComponent == null)
-            {
-                Debug.LogError("[ObjectPoolManager] Cannot spawn from a null Component prefab!");
-                return null;
-            }
+            if (prefabComponent == null) return null;
 
             GameObject spawnedObj = Spawn(prefabComponent.gameObject, position, rotation, parent);
             return spawnedObj != null ? spawnedObj.GetComponent<T>() : null;
         }
 
-        /// <summary>
-        /// Returns an active instance back to its originating pool.
-        /// </summary>
         public bool Despawn(GameObject instance)
         {
             if (instance == null) return false;
@@ -120,14 +93,10 @@ namespace T60.Pooling
                 return tracker.OriginPool.Despawn(instance);
             }
 
-            Debug.LogWarning($"[ObjectPoolManager] Could not find origin pool for object '{instance.name}'. Destroying instead.", instance);
             Destroy(instance);
             return false;
         }
 
-        /// <summary>
-        /// Returns an active instance back to its originating pool after a specified delay in seconds.
-        /// </summary>
         public void Despawn(GameObject instance, float delaySeconds)
         {
             if (delaySeconds <= 0f)
@@ -145,10 +114,6 @@ namespace T60.Pooling
             yield return new WaitForSeconds(delaySeconds);
             Despawn(instance);
         }
-
-        #endregion
-
-        #region Static Convenience Facades
 
         public static GameObject SpawnObject(GameObject prefab, Vector3 position, Quaternion rotation, Transform parent = null)
         {
@@ -194,7 +159,5 @@ namespace T60.Pooling
                 Instance = managerObj.AddComponent<ObjectPoolManager>();
             }
         }
-
-        #endregion
     }
 }

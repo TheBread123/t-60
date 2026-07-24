@@ -2,16 +2,12 @@ using UnityEngine;
 
 namespace T60.StateMachine
 {
-    /// <summary>
-    /// MonoBehaviour host for running the T60 Match State Machine.
-    /// Attach this script to a GameObject in your Unity Scene.
-    /// </summary>
     public class MatchStateMachineRunner : MonoBehaviour
     {
         public StateMachine StateMachine { get; private set; }
         public MatchContext Context { get; private set; }
 
-        [Header("Read-Only Debug Info")]
+        [Header("Debug Info")]
         [SerializeField] private string currentStateName;
         [SerializeField] private float mainClockSeconds;
         [SerializeField] private float turnClockSeconds;
@@ -26,16 +22,13 @@ namespace T60.StateMachine
 
         private void Start()
         {
-            // Start match by entering setup state
             StateMachine.Initialize(new MatchSetupState(this, Context));
         }
 
         private void Update()
         {
-            // Tick state machine frame-by-frame
             StateMachine?.Update();
 
-            // Sync debug values for Inspector visibility
             if (StateMachine?.CurrentState != null)
             {
                 currentStateName = StateMachine.CurrentState.GetType().Name;
@@ -49,11 +42,6 @@ namespace T60.StateMachine
             }
         }
 
-        #region Helper Trigger Methods for UI / Testing
-
-        /// <summary>
-        /// Simulates playing a standard card (e.g. Coolant Flush or Power Surge)
-        /// </summary>
         public void TestPlayCard(string cardName, float clockTimeDelta)
         {
             if (StateMachine.CurrentState is PlayerTurnState playerTurnState)
@@ -66,9 +54,6 @@ namespace T60.StateMachine
             }
         }
 
-        /// <summary>
-        /// Simulates playing a Reflex Card when Main Clock hits zero.
-        /// </summary>
         public void TestPlayReflexCard(string reflexCardName, float addedSeconds = 15f)
         {
             if (StateMachine.CurrentState is ReflexWindowState reflexState)
@@ -81,19 +66,13 @@ namespace T60.StateMachine
             }
         }
 
-        /// <summary>
-        /// Restarts the match state machine.
-        /// </summary>
         public void RestartMatch()
         {
             StateMachine.ChangeState(new MatchSetupState(this, Context));
         }
 
-        #endregion
-
         private void OnGUI()
         {
-            // Simple OnGUI overlay to visualize & test in Unity Editor without setting up UI canvases
             GUILayout.BeginArea(new Rect(20, 20, 320, 300), "T60 State Machine Debug", GUI.skin.window);
             
             GUILayout.Label($"Current State: {currentStateName}");

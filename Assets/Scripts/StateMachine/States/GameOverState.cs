@@ -19,10 +19,7 @@ namespace T60.StateMachine
             Debug.Log($"[GameOverState] MATCH OVER! Winner: Player {_context.WinnerPlayerIndex + 1}");
         }
 
-        public void Update()
-        {
-            // Wait for restart command or UI interaction
-        }
+        public void Update() { }
 
         public void Exit()
         {

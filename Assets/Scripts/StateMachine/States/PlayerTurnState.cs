@@ -15,16 +15,13 @@ namespace T60.StateMachine
 
         public void Enter()
         {
-            Debug.Log($"[PlayerTurnState] Beginning Turn for Player {_context.ActivePlayerIndex + 1}. Turn Clock reset to {_context.TurnClockSeconds}s.");
-            // Draw 1 Protocol card at start of turn (as defined in GDD Section 6)
-            Debug.Log($"[PlayerTurnState] Player {_context.ActivePlayerIndex + 1} draws 1 card.");
+            Debug.Log($"[PlayerTurnState] Beginning Turn for Player {_context.ActivePlayerIndex + 1}.");
         }
 
         public void Update()
         {
             float dt = Time.deltaTime;
 
-            // 1. Tick Main Clock (runs continuously for the entire match unless paused by Freeze Protocol)
             if (!_context.IsMainClockPaused)
             {
                 _context.MainClockSeconds -= dt;
@@ -38,31 +35,23 @@ namespace T60.StateMachine
                 }
             }
 
-            // 2. Tick Turn Clock (resets every 5 seconds)
             _context.TurnClockSeconds -= dt;
             if (_context.TurnClockSeconds <= 0f)
             {
-                // Turn Clock Penalty: lose 1 random card, reset turn clock immediately
-                Debug.LogWarning($"[PlayerTurnState] Turn Clock expired for Player {_context.ActivePlayerIndex + 1}! Losing 1 random card from hand.");
+                Debug.LogWarning($"[PlayerTurnState] Turn Clock expired for Player {_context.ActivePlayerIndex + 1}! Losing card.");
                 _context.TurnClockSeconds = _context.DefaultTurnClockDuration;
             }
         }
 
-        /// <summary>
-        /// Called when the player clicks or plays a card from hand.
-        /// </summary>
         public void PlayCard(string cardName, float mainClockTimeDelta = 0f)
         {
             Debug.Log($"[PlayerTurnState] Player {_context.ActivePlayerIndex + 1} played card: {cardName}.");
 
-            // Apply Main Clock time shift if applicable (e.g., Coolant adds time, Overload subtracts)
             if (mainClockTimeDelta != 0f)
             {
                 _context.MainClockSeconds = Mathf.Max(0f, _context.MainClockSeconds + mainClockTimeDelta);
-                Debug.Log($"[PlayerTurnState] Main Clock adjusted by {mainClockTimeDelta}s. Current: {_context.MainClockSeconds:F2}s");
             }
 
-            // In T60, playing a card immediately hands off turn to opponent
             _context.SwitchTurn();
         }
 

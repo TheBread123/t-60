@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace T60.Pooling
 {
-    /// <summary>
-    /// Manages an isolated object pool for a specific GameObject prefab.
-    /// </summary>
     public class Pool
     {
         public GameObject Prefab { get; private set; }
@@ -28,9 +25,6 @@ namespace T60.Pooling
             }
         }
 
-        /// <summary>
-        /// Instantiates multiple instances in advance and stores them inactive in the pool.
-        /// </summary>
         public void Prewarm(int count)
         {
             for (int i = 0; i < count; i++)
@@ -40,22 +34,9 @@ namespace T60.Pooling
             }
         }
 
-        /// <summary>
-        /// Retrieves an instance from the pool (or instantiates a new one if empty),
-        /// activates it, and notifies IPoolable listeners.
-        /// </summary>
         public GameObject Spawn(Vector3 position, Quaternion rotation, Transform parent = null)
         {
-            GameObject instance;
-
-            if (_inactiveQueue.Count > 0)
-            {
-                instance = _inactiveQueue.Dequeue();
-            }
-            else
-            {
-                instance = CreateNewInstance();
-            }
+            GameObject instance = _inactiveQueue.Count > 0 ? _inactiveQueue.Dequeue() : CreateNewInstance();
 
             if (instance == null)
             {
@@ -65,15 +46,12 @@ namespace T60.Pooling
 
             _activeSet.Add(instance);
 
-            // Configure Transform
             Transform t = instance.transform;
             t.SetParent(parent != null ? parent : RootParent, false);
             t.SetPositionAndRotation(position, rotation);
 
-            // Activate GameObject
             instance.SetActive(true);
 
-            // Notify IPoolable components
             IPoolable[] poolables = instance.GetComponentsInChildren<IPoolable>(true);
             for (int i = 0; i < poolables.Length; i++)
             {
@@ -83,37 +61,25 @@ namespace T60.Pooling
             return instance;
         }
 
-        /// <summary>
-        /// Returns an active instance back to the pool, deactivates it, and notifies IPoolable listeners.
-        /// </summary>
         public bool Despawn(GameObject instance)
         {
             if (instance == null) return false;
 
             if (!_activeSet.Contains(instance))
             {
-                // Safety check: avoid double despawning
-                if (_inactiveQueue.Contains(instance))
-                {
-                    Debug.LogWarning($"[Pool] Attempted to despawn object '{instance.name}' which is already in the inactive pool!", instance);
-                    return false;
-                }
-
-                Debug.LogWarning($"[Pool] Object '{instance.name}' was not recognized as active in pool '{Prefab.name}'. Forcing despawn.", instance);
+                if (_inactiveQueue.Contains(instance)) return false;
             }
             else
             {
                 _activeSet.Remove(instance);
             }
 
-            // Notify IPoolable components before deactivation
             IPoolable[] poolables = instance.GetComponentsInChildren<IPoolable>(true);
             for (int i = 0; i < poolables.Length; i++)
             {
                 poolables[i].OnDespawn();
             }
 
-            // Deactivate and reset hierarchy
             instance.SetActive(false);
             if (RootParent != null)
             {
@@ -124,9 +90,6 @@ namespace T60.Pooling
             return true;
         }
 
-        /// <summary>
-        /// Clears and destroys all instances managed by this pool.
-        /// </summary>
         public void Clear()
         {
             foreach (GameObject obj in _activeSet)
@@ -147,7 +110,6 @@ namespace T60.Pooling
             GameObject instance = Object.Instantiate(Prefab, RootParent);
             instance.name = $"{Prefab.name}_PooledInstance";
 
-            // Attach tracker component for rapid pool identification and self-despawning
             if (!instance.TryGetComponent(out PooledObjectTracker tracker))
             {
                 tracker = instance.AddComponent<PooledObjectTracker>();
