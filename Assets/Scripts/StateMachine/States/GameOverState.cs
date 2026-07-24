@@ -2,27 +2,25 @@ using UnityEngine;
 
 namespace T60.StateMachine
 {
-    public class GameOverState : IState
+    public class GameOverState : BaseState
     {
-        private readonly MatchStateMachineRunner _runner;
-        private readonly MatchContext _context;
-
-        public GameOverState(MatchStateMachineRunner runner, MatchContext context)
+        public override void Enter()
         {
-            _runner = runner;
-            _context = context;
+            base.Enter();
+            if (Context != null)
+            {
+                Context.MatchOver = true;
+                Debug.Log($"[GameOverState] MATCH OVER! Winner: Player {Context.WinnerPlayerIndex + 1}");
+            }
         }
 
-        public void Enter()
+        public override void Update()
         {
-            _context.MatchOver = true;
-            Debug.Log($"[GameOverState] MATCH OVER! Winner: Player {_context.WinnerPlayerIndex + 1}");
         }
 
-        public void Update() { }
-
-        public void Exit()
+        public override void Exit()
         {
+            base.Exit();
             Debug.Log("[GameOverState] Leaving Game Over screen.");
         }
     }

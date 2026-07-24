@@ -1,63 +1,79 @@
 using UnityEngine;
+using T60.Cards;
 
 namespace T60.StateMachine
 {
-    public class PlayerTurnState : IState
+    public class PlayerTurnState : BaseState
     {
-        private readonly MatchStateMachineRunner _runner;
-        private readonly MatchContext _context;
+        [Header("Transitions")]
+        [SerializeField] private BaseState gameOverState;
 
-        public PlayerTurnState(MatchStateMachineRunner runner, MatchContext context)
+        public override void Enter()
         {
-            _runner = runner;
-            _context = context;
+            base.Enter();
+            if (Context != null)
+            {
+                Debug.Log($"[PlayerTurnState] Beginning Turn for Player {Context.ActivePlayerIndex + 1}.");
+            }
         }
 
-        public void Enter()
+        public override void Update()
         {
-            Debug.Log($"[PlayerTurnState] Beginning Turn for Player {_context.ActivePlayerIndex + 1}.");
-        }
+            if (Context == null) return;
 
-        public void Update()
-        {
             float dt = Time.deltaTime;
 
-            if (!_context.IsMainClockPaused)
+            if (!Context.IsMainClockPaused)
             {
-                _context.MainClockSeconds -= dt;
+                Context.MainClockSeconds -= dt;
 
-                if (_context.MainClockSeconds <= 0f)
+                if (Context.MainClockSeconds <= 0f)
                 {
-                    _context.MainClockSeconds = 0f;
-                    Debug.LogWarning($"[PlayerTurnState] Main Clock reached 0:00 on Player {_context.ActivePlayerIndex + 1}'s turn!");
-                    _runner.StateMachine.ChangeState(new ReflexWindowState(_runner, _context));
+                    Context.MainClockSeconds = 0f;
+                    int loserIndex = Context.ActivePlayerIndex;
+                    Context.WinnerPlayerIndex = (loserIndex == 0) ? 1 : 0;
+                    Debug.LogWarning($"[PlayerTurnState] Main Clock reached 0:00 on Player {loserIndex + 1}'s turn! Transitioning to Game Over.");
+                    
+                    if (gameOverState != null)
+                    {
+                        Runner.StateMachine.ChangeState(gameOverState);
+                    }
+                    else
+                    {
+                        Debug.LogError("[PlayerTurnState] GameOverState transition reference is missing!");
+                    }
                     return;
                 }
             }
 
-            _context.TurnClockSeconds -= dt;
-            if (_context.TurnClockSeconds <= 0f)
+            Context.TurnClockSeconds -= dt;
+            if (Context.TurnClockSeconds <= 0f)
             {
-                Debug.LogWarning($"[PlayerTurnState] Turn Clock expired for Player {_context.ActivePlayerIndex + 1}! Losing card.");
-                _context.TurnClockSeconds = _context.DefaultTurnClockDuration;
+                Debug.LogWarning($"[PlayerTurnState] Turn Clock expired for Player {Context.ActivePlayerIndex + 1}! Losing card.");
+                Context.TurnClockSeconds = Context.DefaultTurnClockDuration;
             }
         }
 
-        public void PlayCard(string cardName, float mainClockTimeDelta = 0f)
+        public void PlayCard(Card card)
         {
-            Debug.Log($"[PlayerTurnState] Player {_context.ActivePlayerIndex + 1} played card: {cardName}.");
-
-            if (mainClockTimeDelta != 0f)
+            if (Context == null) return;
+            if (card == null)
             {
-                _context.MainClockSeconds = Mathf.Max(0f, _context.MainClockSeconds + mainClockTimeDelta);
+                Debug.LogWarning("[PlayerTurnState] Attempted to play a null Card!");
+                return;
             }
 
-            _context.SwitchTurn();
+            Debug.Log($"[PlayerTurnState] Player {Context.ActivePlayerIndex + 1} playing card '{card.CardName}'.");
+            card.Play(Context);
         }
 
-        public void Exit()
+        public override void Exit()
         {
-            Debug.Log($"[PlayerTurnState] Exiting turn for Player {_context.ActivePlayerIndex + 1}.");
+            base.Exit();
+            if (Context != null)
+            {
+                Debug.Log($"[PlayerTurnState] Exiting turn for Player {Context.ActivePlayerIndex + 1}.");
+            }
         }
     }
 }

@@ -2,37 +2,53 @@ using UnityEngine;
 
 namespace T60.StateMachine
 {
-    public class MatchSetupState : IState
+    public class MatchSetupState : BaseState
     {
-        private readonly MatchStateMachineRunner _runner;
-        private readonly MatchContext _context;
+        [Header("Transitions")]
+        [SerializeField] private BaseState dealCardsState;
+        [SerializeField] private BaseState playerTurnState;
 
-        public MatchSetupState(MatchStateMachineRunner runner, MatchContext context)
-        {
-            _runner = runner;
-            _context = context;
-        }
+        [Header("Setup Parameters")]
+        [SerializeField] private float initialMainClockSeconds = 60f;
+        [SerializeField] private float defaultTurnClockDuration = 5f;
 
-        public void Enter()
+        public override void Enter()
         {
+            base.Enter();
             Debug.Log("[MatchSetupState] Initializing match parameters...");
 
-            _context.MainClockSeconds = 60f;
-            _context.DefaultTurnClockDuration = 5f;
-            _context.TurnClockSeconds = _context.DefaultTurnClockDuration;
-            _context.ActivePlayerIndex = 0;
-            _context.MatchOver = false;
+            if (Context != null)
+            {
+                Context.MainClockSeconds = initialMainClockSeconds;
+                Context.DefaultTurnClockDuration = defaultTurnClockDuration;
+                Context.TurnClockSeconds = Context.DefaultTurnClockDuration;
+                Context.ActivePlayerIndex = 0;
+                Context.WinnerPlayerIndex = -1;
+                Context.MatchOver = false;
+            }
 
-            Debug.Log("[MatchSetupState] Shuffling Protocol Deck & dealing starting cards.");
+            Debug.Log("[MatchSetupState] Match parameters set. Moving to card dealing.");
         }
 
-        public void Update()
+        public override void Update()
         {
-            _runner.StateMachine.ChangeState(new PlayerTurnState(_runner, _context));
+            if (dealCardsState != null)
+            {
+                Runner.StateMachine.ChangeState(dealCardsState);
+            }
+            else if (playerTurnState != null)
+            {
+                Runner.StateMachine.ChangeState(playerTurnState);
+            }
+            else
+            {
+                Debug.LogError("[MatchSetupState] Neither dealCardsState nor playerTurnState transition references are assigned!");
+            }
         }
 
-        public void Exit()
+        public override void Exit()
         {
+            base.Exit();
             Debug.Log("[MatchSetupState] Match initialized.");
         }
     }

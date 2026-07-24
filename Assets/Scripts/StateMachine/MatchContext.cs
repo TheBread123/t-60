@@ -12,7 +12,6 @@ namespace T60.StateMachine
         public int WinnerPlayerIndex { get; set; } = -1;
 
         public bool IsMainClockPaused { get; set; } = false;
-        public bool ReflexWindowActive { get; set; } = false;
         public bool MatchOver { get; set; } = false;
 
         public void SwitchTurn()

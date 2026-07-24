@@ -1,4 +1,7 @@
 using UnityEngine;
+using System.Collections.Generic;
+using T60.Cards;
+using T60.Cards.Effects;
 
 namespace T60.StateMachine
 {
@@ -7,22 +10,38 @@ namespace T60.StateMachine
         public StateMachine StateMachine { get; private set; }
         public MatchContext Context { get; private set; }
 
+        [Header("State Machine Setup")]
+        [SerializeField] private BaseState startingState;
+
         [Header("Debug Info")]
         [SerializeField] private string currentStateName;
         [SerializeField] private float mainClockSeconds;
         [SerializeField] private float turnClockSeconds;
         [SerializeField] private int activePlayer;
-        [SerializeField] private bool reflexActive;
 
         private void Awake()
         {
             Context = new MatchContext();
             StateMachine = new StateMachine();
+
+            // Find all child or attached BaseState components and initialize them
+            BaseState[] states = GetComponentsInChildren<BaseState>(true);
+            foreach (var state in states)
+            {
+                state.InitializeState(this);
+            }
         }
 
         private void Start()
         {
-            StateMachine.Initialize(new MatchSetupState(this, Context));
+            if (startingState != null)
+            {
+                StateMachine.Initialize(startingState);
+            }
+            else
+            {
+                Debug.LogError("[Runner] Starting state is not assigned in the Inspector!");
+            }
         }
 
         private void Update()
@@ -38,42 +57,55 @@ namespace T60.StateMachine
                 mainClockSeconds = Context.MainClockSeconds;
                 turnClockSeconds = Context.TurnClockSeconds;
                 activePlayer = Context.ActivePlayerIndex + 1;
-                reflexActive = Context.ReflexWindowActive;
             }
         }
 
-        public void TestPlayCard(string cardName, float clockTimeDelta)
+        public void TestPlayCard(string cardName, float clockTimeDelta, bool switchTurn = true)
         {
             if (StateMachine.CurrentState is PlayerTurnState playerTurnState)
             {
-                playerTurnState.PlayCard(cardName, clockTimeDelta);
-            }
-            else
-            {
-                Debug.LogWarning($"[Runner] Cannot play normal card '{cardName}' outside of PlayerTurnState!");
-            }
-        }
+                Card testCard = ScriptableObject.CreateInstance<Card>();
+                testCard.CardName = cardName;
 
-        public void TestPlayReflexCard(string reflexCardName, float addedSeconds = 15f)
-        {
-            if (StateMachine.CurrentState is ReflexWindowState reflexState)
-            {
-                reflexState.PlayReflexCard(reflexCardName, addedSeconds);
+                List<Effect> effectsList = new List<Effect>();
+
+                if (clockTimeDelta != 0f)
+                {
+                    ModifyMainClockEffect clockEffect = new ModifyMainClockEffect();
+                    clockEffect.TimeDelta = clockTimeDelta;
+                    effectsList.Add(clockEffect);
+                }
+
+                if (switchTurn)
+                {
+                    SwitchTurnEffect switchEffect = new SwitchTurnEffect();
+                    effectsList.Add(switchEffect);
+                }
+
+                testCard.SetEffects(effectsList.ToArray());
+                playerTurnState.PlayCard(testCard);
             }
             else
             {
-                Debug.LogWarning($"[Runner] Cannot play Reflex card '{reflexCardName}' unless in ReflexWindowState!");
+                Debug.LogWarning($"[Runner] Cannot play card '{cardName}' outside of PlayerTurnState!");
             }
         }
 
         public void RestartMatch()
         {
-            StateMachine.ChangeState(new MatchSetupState(this, Context));
+            if (startingState != null)
+            {
+                StateMachine.ChangeState(startingState);
+            }
+            else
+            {
+                Debug.LogError("[Runner] Cannot restart match; startingState is null!");
+            }
         }
 
         private void OnGUI()
         {
-            GUILayout.BeginArea(new Rect(20, 20, 320, 300), "T60 State Machine Debug", GUI.skin.window);
+            GUILayout.BeginArea(new Rect(20, 20, 320, 320), "T60 State Machine Debug", GUI.skin.window);
             
             GUILayout.Label($"Current State: {currentStateName}");
             GUILayout.Label($"Active Player: Player {activePlayer}");
@@ -88,29 +120,23 @@ namespace T60.StateMachine
                     RestartMatch();
                 }
             }
-            else if (StateMachine?.CurrentState is ReflexWindowState)
-            {
-                GUI.color = Color.red;
-                GUILayout.Label("!!! MAIN CLOCK AT ZERO !!!");
-                GUI.color = Color.white;
-                if (GUILayout.Button("Play Reflex Card (Emergency Vent +15s)"))
-                {
-                    TestPlayReflexCard("Emergency Vent", 15f);
-                }
-            }
             else if (StateMachine?.CurrentState is PlayerTurnState)
             {
                 if (GUILayout.Button("Play Coolant Flush (+20s Main Clock)"))
                 {
-                    TestPlayCard("Coolant Flush", +20f);
+                    TestPlayCard("Coolant Flush", +20f, true);
                 }
                 if (GUILayout.Button("Play Power Surge (-15s Main Clock)"))
                 {
-                    TestPlayCard("Power Surge", -15f);
+                    TestPlayCard("Power Surge", -15f, true);
                 }
                 if (GUILayout.Button("Play Neutral Card (0s Shift)"))
                 {
-                    TestPlayCard("Neutral Protocol", 0f);
+                    TestPlayCard("Neutral Protocol", 0f, true);
+                }
+                if (GUILayout.Button("Play Bonus Action (+10s, No Turn Switch)"))
+                {
+                    TestPlayCard("Overdrive Boost", +10f, false);
                 }
             }
 
