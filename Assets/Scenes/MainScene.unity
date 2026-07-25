@@ -988,7 +988,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b49356f328ed7be4bb39290bf9e143dd, type: 2}
   - {fileID: 11400000, guid: 0abe29176bbe10140b734968cf58bf80, type: 2}
   - {fileID: 11400000, guid: 362294a80ea34574db90980adcaaef76, type: 2}
-  initialHandSize: 5
+  initialHandSize: 3
   dealStaggerDelay: 0.15
   cardDealMoveDuration: 0.4
   cardHandSpacing: 0.75
@@ -1267,7 +1267,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dealCardsState: {fileID: 431797658}
   playerTurnState: {fileID: 253836533}
-  initialMainClockSeconds: 60
+  initialMainClockSeconds: 10
   defaultTurnClockDuration: 5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
