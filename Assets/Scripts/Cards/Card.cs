@@ -12,6 +12,8 @@ namespace T60.Cards
         [TextArea]
         [SerializeField] private string description = "";
         [SerializeField] private Sprite art;
+        [SerializeField] private int weight = 1;
+        [SerializeField] private bool isNextTurnEffect = false;
 
         [SerializeReference, SubclassSelector]
         private Effect[] effects = new Effect[0];
@@ -32,6 +34,19 @@ namespace T60.Cards
         {
             get => art;
             set => art = value;
+        }
+
+        // Higher weight = rarer draw; represents card value, not pick frequency directly.
+        public int Weight
+        {
+            get => weight;
+            set => weight = value;
+        }
+
+        public bool IsNextTurnEffect
+        {
+            get => isNextTurnEffect;
+            set => isNextTurnEffect = value;
         }
 
         public Effect[] Effects

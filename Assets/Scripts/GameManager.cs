@@ -121,8 +121,25 @@ namespace T60
                 return null;
             }
 
-            int randomIndex = Random.Range(0, cardSelectionCollection.Count);
-            return cardSelectionCollection[randomIndex];
+            // Higher Card.Weight = rarer draw, so cards are chosen proportional to 1/weight.
+            float totalSelectionWeight = 0f;
+            foreach (var card in cardSelectionCollection)
+            {
+                totalSelectionWeight += 1f / Mathf.Max(1, card != null ? card.Weight : 1);
+            }
+
+            float roll = Random.Range(0f, totalSelectionWeight);
+            float cumulative = 0f;
+            foreach (var card in cardSelectionCollection)
+            {
+                cumulative += 1f / Mathf.Max(1, card != null ? card.Weight : 1);
+                if (roll <= cumulative)
+                {
+                    return card;
+                }
+            }
+
+            return cardSelectionCollection[cardSelectionCollection.Count - 1];
         }
 
         public Vector3 GetHandCardWorldPosition(int playerIndex, int cardIndex, int totalCards, Camera cam = null)

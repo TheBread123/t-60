@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f063d61b235b484ab73d624bed1e277, type: 3}
+  m_Name: Card_Countermand
+  m_EditorClassIdentifier:
+  cardName: Countermand
+  description: Your opponent loses a pre-move.
+  art: {fileID: 0}
+  weight: 1
+  effects:
+  - rid: 2000000000000001001
+  - rid: 2000000000000001002
+  references:
+    version: 2
+    RefIds:
+    - rid: 2000000000000001001
+      type: {class: SwitchTurnEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
+      data:
+    - rid: 2000000000000001002
+      type: {class: ModifyPreMoveEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
+      data:
+        amount: -1
+        targetOpponent: 1
