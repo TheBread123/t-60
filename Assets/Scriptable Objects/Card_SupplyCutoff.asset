@@ -11,11 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0f063d61b235b484ab73d624bed1e277, type: 3}
   m_Name: Card_SupplyCutoff
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   cardName: Supply Cutoff
   description: Your opponent does not draw a card.
-  art: {fileID: 0}
-  weight: 1
+  art: {fileID: 21300000, guid: 91e001cc3e7e65548980ef278e3111fe, type: 3}
+  weight: 6
+  cardCategory: 0
+  isNextTurnEffect: 0
   effects:
   - rid: 2000000000000000701
   - rid: 2000000000000000702
@@ -24,9 +26,10 @@ MonoBehaviour:
     RefIds:
     - rid: 2000000000000000701
       type: {class: SwitchTurnEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
-      data:
+      data: 
     - rid: 2000000000000000702
       type: {class: ModifyNextTurnDrawEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
       data:
         drawDelta: -1
         targetOpponent: 1
+        skipNextDrawStep: 1

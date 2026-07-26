@@ -11,11 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0f063d61b235b484ab73d624bed1e277, type: 3}
   m_Name: Card_ScheduledSweep
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   cardName: Scheduled Sweep
   description: Draw 2 cards on your next turn.
-  art: {fileID: 0}
-  weight: 1
+  art: {fileID: 21300000, guid: 220920da5e733004b84155d2cb9911f6, type: 3}
+  weight: 5
+  cardCategory: 1
+  isNextTurnEffect: 0
   effects:
   - rid: 2000000000000000401
   - rid: 2000000000000000402
@@ -24,9 +26,9 @@ MonoBehaviour:
     RefIds:
     - rid: 2000000000000000401
       type: {class: SwitchTurnEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
-      data:
+      data: 
     - rid: 2000000000000000402
       type: {class: ModifyNextTurnDrawEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
       data:
-        drawDelta: 2
+        drawDelta: 1
         targetOpponent: 0

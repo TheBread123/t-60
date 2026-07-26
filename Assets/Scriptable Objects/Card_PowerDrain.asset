@@ -11,11 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0f063d61b235b484ab73d624bed1e277, type: 3}
   m_Name: Card_PowerDrain
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   cardName: Power Drain
   description: Remove 2 seconds from the clock.
-  art: {fileID: 0}
-  weight: 1
+  art: {fileID: 21300000, guid: af7d3b403d191d14f87f1c58c5387860, type: 3}
+  weight: 2
+  cardCategory: 0
+  isNextTurnEffect: 0
   effects:
   - rid: 2000000000000000201
   - rid: 2000000000000000202
@@ -24,7 +26,7 @@ MonoBehaviour:
     RefIds:
     - rid: 2000000000000000201
       type: {class: SwitchTurnEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
-      data:
+      data: 
     - rid: 2000000000000000202
       type: {class: ModifyMainClockEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
       data:

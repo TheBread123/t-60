@@ -11,11 +11,13 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0f063d61b235b484ab73d624bed1e277, type: 3}
   m_Name: Card_StandbyMode
-  m_EditorClassIdentifier:
+  m_EditorClassIdentifier: 
   cardName: Standby Mode
   description: Pass and do nothing this turn.
-  art: {fileID: 0}
+  art: {fileID: 21300000, guid: 4490ae244e622784dab20629ec830f55, type: 3}
   weight: 1
+  cardCategory: 2
+  isNextTurnEffect: 0
   effects:
   - rid: 2000000000000000601
   references:
@@ -23,4 +25,4 @@ MonoBehaviour:
     RefIds:
     - rid: 2000000000000000601
       type: {class: SwitchTurnEffect, ns: T60.Cards.Effects, asm: Assembly-CSharp}
-      data:
+      data: 
