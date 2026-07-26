@@ -30,7 +30,7 @@ namespace T60.StateMachine
 
         public void Update()
         {
-            CurrentState?.Update();
+            CurrentState?.StateUpdate();
         }
     }
 }

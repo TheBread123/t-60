@@ -105,7 +105,7 @@ namespace T60.StateMachine
 
         private void OnGUI()
         {
-            GUILayout.BeginArea(new Rect(20, 20, 320, 320), "T60 State Machine Debug", GUI.skin.window);
+            GUILayout.BeginArea(new Rect(20, 20, 280, 180), "T60 State Machine Debug", GUI.skin.window);
             
             GUILayout.Label($"Current State: {currentStateName}");
             GUILayout.Label($"Active Player: Player {activePlayer}");
@@ -115,29 +115,11 @@ namespace T60.StateMachine
             if (Context != null && Context.MatchOver)
             {
                 GUILayout.Label($"GAME OVER! Winner: Player {Context.WinnerPlayerIndex + 1}");
-                if (GUILayout.Button("Restart Match"))
-                {
-                    RestartMatch();
-                }
             }
-            else if (StateMachine?.CurrentState is PlayerTurnState)
+
+            if (GUILayout.Button("Restart Match"))
             {
-                if (GUILayout.Button("Play Coolant Flush (+20s Main Clock)"))
-                {
-                    TestPlayCard("Coolant Flush", +20f, true);
-                }
-                if (GUILayout.Button("Play Power Surge (-15s Main Clock)"))
-                {
-                    TestPlayCard("Power Surge", -15f, true);
-                }
-                if (GUILayout.Button("Play Neutral Card (0s Shift)"))
-                {
-                    TestPlayCard("Neutral Protocol", 0f, true);
-                }
-                if (GUILayout.Button("Play Bonus Action (+10s, No Turn Switch)"))
-                {
-                    TestPlayCard("Overdrive Boost", +10f, false);
-                }
+                RestartMatch();
             }
 
             GUILayout.EndArea();
