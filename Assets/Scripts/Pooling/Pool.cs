@@ -90,6 +90,18 @@ namespace T60.Pooling
             return true;
         }
 
+        public void DespawnAllActive()
+        {
+            List<GameObject> activeList = new List<GameObject>(_activeSet);
+            foreach (GameObject obj in activeList)
+            {
+                if (obj != null)
+                {
+                    Despawn(obj);
+                }
+            }
+        }
+
         public void Clear()
         {
             foreach (GameObject obj in _activeSet)

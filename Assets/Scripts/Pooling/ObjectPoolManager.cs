@@ -109,9 +109,20 @@ namespace T60.Pooling
             }
         }
 
+        public void DespawnAllActive()
+        {
+            foreach (var kvp in _poolsByPrefab)
+            {
+                if (kvp.Value != null)
+                {
+                    kvp.Value.DespawnAllActive();
+                }
+            }
+        }
+
         private IEnumerator DespawnRoutine(GameObject instance, float delaySeconds)
         {
-            yield return new WaitForSeconds(delaySeconds);
+            yield return new WaitForSecondsRealtime(delaySeconds);
             Despawn(instance);
         }
 
