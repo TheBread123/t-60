@@ -13,6 +13,7 @@ namespace T60.UI
 
         [Header("UI Text References")]
         [SerializeField] private TMP_Text mainTimerText;
+        [SerializeField] private TMP_Text turnTimerText;
         [SerializeField] private TMP_Text mainTimerValueChangeText;
         [SerializeField] private TMP_Text announcementText;
         [SerializeField] private TMP_Text countdownText;
@@ -59,6 +60,7 @@ namespace T60.UI
         private Coroutine activeTimerValueChangeCoroutine;
 
         public TMP_Text MainTimerText => mainTimerText;
+        public TMP_Text TurnTimerText => turnTimerText;
         public TMP_Text MainTimerValueChangeText => mainTimerValueChangeText;
         public TMP_Text AnnouncementText => announcementText;
         public TMP_Text CountdownText => countdownText;
@@ -173,9 +175,31 @@ namespace T60.UI
         private void Update()
         {
             UpdateMainTimerDisplay();
+            UpdateTurnTimerDisplay();
         }
 
         #region Timer Updates
+
+        private void UpdateTurnTimerDisplay()
+        {
+            if (turnTimerText == null) return;
+
+            if (matchRunner == null)
+            {
+                ResolveMatchRunner();
+            }
+
+            if (matchRunner == null || matchRunner.Context == null) return;
+
+            var context = matchRunner.Context;
+
+            if (!turnTimerText.gameObject.activeSelf)
+            {
+                turnTimerText.gameObject.SetActive(true);
+            }
+
+            turnTimerText.text = FormatTimeSeconds(context.TurnClockSeconds);
+        }
 
         private void UpdateMainTimerDisplay()
         {

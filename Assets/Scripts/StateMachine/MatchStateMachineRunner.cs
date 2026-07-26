@@ -102,27 +102,5 @@ namespace T60.StateMachine
                 Debug.LogError("[Runner] Cannot restart match; startingState is null!");
             }
         }
-
-        private void OnGUI()
-        {
-            GUILayout.BeginArea(new Rect(20, 20, 280, 180), "T60 State Machine Debug", GUI.skin.window);
-            
-            GUILayout.Label($"Current State: {currentStateName}");
-            GUILayout.Label($"Active Player: Player {activePlayer}");
-            GUILayout.Label($"Main Clock: {mainClockSeconds:F2}s");
-            GUILayout.Label($"Turn Clock: {turnClockSeconds:F2}s");
-
-            if (Context != null && Context.MatchOver)
-            {
-                GUILayout.Label($"GAME OVER! Winner: Player {Context.WinnerPlayerIndex + 1}");
-            }
-
-            if (GUILayout.Button("Restart Match"))
-            {
-                RestartMatch();
-            }
-
-            GUILayout.EndArea();
-        }
     }
 }

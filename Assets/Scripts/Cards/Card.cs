@@ -3,6 +3,7 @@ using T60.StateMachine;
 using T60.Cards.Effects;
 using T60.Cards.Attributes;
 using T60.UI;
+using T60.Audio;
 
 namespace T60.Cards
 {
@@ -80,6 +81,11 @@ namespace T60.Cards
             int playerIdx = context.ActivePlayerIndex;
             int activePlayer = playerIdx + 1;
             Debug.Log($"[Card] Playing card '{cardName}' for Player {activePlayer}.");
+
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayRandomSfx();
+            }
 
             // Firewall only intercepts Offensive cards. Defensive and Neutral cards bypass the shield.
             if (context.EffectsBlocked[playerIdx] && cardCategory == CardCategory.Offensive)

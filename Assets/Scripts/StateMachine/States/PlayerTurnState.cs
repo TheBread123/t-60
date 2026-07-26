@@ -1,5 +1,6 @@
 using UnityEngine;
 using T60.Cards;
+using T60.Pooling;
 using T60.UI;
 
 namespace T60.StateMachine
@@ -55,7 +56,7 @@ namespace T60.StateMachine
                             if (cardToRemove != null)
                             {
                                 hand.RemoveAt(randIdx);
-                                T60.Pooling.ObjectPoolManager.DespawnObject(cardToRemove.gameObject);
+                                ObjectPoolManager.DespawnObject(cardToRemove.gameObject);
                                 removedActual++;
                                 Debug.Log($"[PlayerTurnState] Destroyed card '{cardToRemove.CardData?.CardName}' from Player {activePlayer + 1}'s hand due to Data Purge.");
                             }
@@ -184,7 +185,28 @@ namespace T60.StateMachine
             Context.TurnClockSeconds -= dt;
             if (Context.TurnClockSeconds <= 0f)
             {
-                Debug.LogWarning($"[PlayerTurnState] Turn Clock expired for Player {Context.ActivePlayerIndex + 1}! Losing card.");
+                int activePlayer = Context.ActivePlayerIndex;
+                Debug.LogWarning($"[PlayerTurnState] Turn Clock expired for Player {activePlayer + 1}! Losing card.");
+
+                if (GameManager.Instance != null)
+                {
+                    var hand = GameManager.Instance.GetPlayerHand(activePlayer);
+                    if (hand != null && hand.Count > 0)
+                    {
+                        int randIdx = Random.Range(0, hand.Count);
+                        CardHandler cardToRemove = hand[randIdx];
+                        if (cardToRemove != null)
+                        {
+                            string cardName = cardToRemove.CardData != null ? cardToRemove.CardData.CardName : "Unknown";
+                            hand.RemoveAt(randIdx);
+                            ObjectPoolManager.DespawnObject(cardToRemove.gameObject);
+                            ActionLogManager.LogTurnEvent(activePlayer, $"lost '{cardName}' to Turn Clock expiring");
+                            Debug.Log($"[PlayerTurnState] Removed random card '{cardName}' from Player {activePlayer + 1}'s hand due to Turn Clock expiring.");
+                        }
+                        GameManager.Instance.RecalculateHandLayout(activePlayer);
+                    }
+                }
+
                 Context.TurnClockSeconds = Context.DefaultTurnClockDuration;
             }
         }
@@ -198,8 +220,20 @@ namespace T60.StateMachine
                 return;
             }
 
-            Debug.Log($"[PlayerTurnState] Player {Context.ActivePlayerIndex + 1} playing card '{card.CardName}'.");
+            int mover = Context.ActivePlayerIndex;
+            Debug.Log($"[PlayerTurnState] Player {mover + 1} playing card '{card.CardName}'.");
             card.Play(Context);
+
+            // Firewall jams its target's next Offensive play, consumed by the block check in
+            // Card.Play(). If the mover still has the flag set after playing a non-Offensive
+            // card, their jammed turn just ended without triggering it — expire it now, while
+            // we still have their pre-switch index, rather than the opponent's post-switch one.
+            if (Context.EffectsBlocked[mover])
+            {
+                Context.EffectsBlocked[mover] = false;
+                Debug.Log($"[PlayerTurnState] Firewall shield for Player {mover + 1} expired unused.");
+                ActionLogManager.LogInfo($"🛡️ Firewall on Player {mover + 1} expired — no Offensive card was played against it.");
+            }
 
             if (!Context.MatchOver && Runner != null && Runner.StateMachine != null)
             {
@@ -213,14 +247,6 @@ namespace T60.StateMachine
             base.Exit();
             if (Context != null)
             {
-                // Firewall expires at end of the shielded player's turn.
-                // If the opponent never played an Offensive card, the shield dissolves here.
-                if (Context.EffectsBlocked[Context.ActivePlayerIndex])
-                {
-                    Context.EffectsBlocked[Context.ActivePlayerIndex] = false;
-                    Debug.Log($"[PlayerTurnState] Firewall shield for Player {Context.ActivePlayerIndex + 1} expired unused.");
-                    ActionLogManager.LogInfo($"🛡️ Firewall on Player {Context.ActivePlayerIndex + 1} expired — no Offensive card was played against it.");
-                }
                 Debug.Log($"[PlayerTurnState] Exiting turn for Player {Context.ActivePlayerIndex + 1}.");
             }
         }
