@@ -10,7 +10,9 @@ namespace T60.Cards.Effects
         {
             if (context == null) return;
 
-            context.SwitchTurn();
+            // Turn switching is now handled automatically by PlayerTurnState upon playing any card.
+            string cardName = sourceCard != null ? sourceCard.CardName : "Unknown Card";
+            Debug.Log($"[SwitchTurnEffect] Executed from '{cardName}'. Turn switch is managed automatically by turn state.");
         }
     }
 }

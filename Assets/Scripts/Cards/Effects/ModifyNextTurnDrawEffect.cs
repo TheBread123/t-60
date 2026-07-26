@@ -8,6 +8,7 @@ namespace T60.Cards.Effects
     {
         [SerializeField] private int drawDelta = 1;
         [SerializeField] private bool targetOpponent = false;
+        [SerializeField] private bool skipNextDrawStep = false;
 
         public int DrawDelta
         {
@@ -21,15 +22,28 @@ namespace T60.Cards.Effects
             set => targetOpponent = value;
         }
 
+        public bool SkipNextDrawStep
+        {
+            get => skipNextDrawStep;
+            set => skipNextDrawStep = value;
+        }
+
         public override void Execute(MatchContext context, Card sourceCard)
         {
             if (context == null) return;
 
             int target = targetOpponent ? context.OpponentIndex : context.ActivePlayerIndex;
-            context.NextTurnDrawDelta[target] += drawDelta;
+            if (skipNextDrawStep)
+            {
+                context.SkipNextDraw[target] = true;
+            }
+            else
+            {
+                context.NextTurnDrawDelta[target] += drawDelta;
+            }
 
             string cardName = sourceCard != null ? sourceCard.CardName : "Unknown Card";
-            Debug.Log($"[ModifyNextTurnDrawEffect] '{cardName}' changed Player {target + 1}'s next-turn draw count by {drawDelta}.");
+            Debug.Log($"[ModifyNextTurnDrawEffect] '{cardName}' modified Player {target + 1}'s draw step. SkipDraw: {skipNextDrawStep}, Delta: {drawDelta}.");
         }
     }
 }

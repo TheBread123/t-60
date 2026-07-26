@@ -2,9 +2,15 @@ using UnityEngine;
 using T60.StateMachine;
 using T60.Cards.Effects;
 using T60.Cards.Attributes;
+using T60.UI;
 
 namespace T60.Cards
 {
+    public enum CardCategory
+    {
+        Offensive, Defensive, Neutral
+    }
+
     [CreateAssetMenu(menuName = "T60/Card", fileName = "NewCard")]
     public class Card : ScriptableObject
     {
@@ -13,6 +19,7 @@ namespace T60.Cards
         [SerializeField] private string description = "";
         [SerializeField] private Sprite art;
         [SerializeField] private int weight = 1;
+        [SerializeField] private CardCategory cardCategory;
         [SerializeField] private bool isNextTurnEffect = false;
 
         [SerializeReference, SubclassSelector]
@@ -43,6 +50,12 @@ namespace T60.Cards
             set => weight = value;
         }
 
+        public CardCategory CardCategory
+        {
+            get => cardCategory;
+            set => cardCategory = value;
+        }
+
         public bool IsNextTurnEffect
         {
             get => isNextTurnEffect;
@@ -64,8 +77,20 @@ namespace T60.Cards
         {
             if (context == null) return;
 
-            int activePlayer = context.ActivePlayerIndex + 1;
+            int playerIdx = context.ActivePlayerIndex;
+            int activePlayer = playerIdx + 1;
             Debug.Log($"[Card] Playing card '{cardName}' for Player {activePlayer}.");
+
+            // Firewall only intercepts Offensive cards. Defensive and Neutral cards bypass the shield.
+            if (context.EffectsBlocked[playerIdx] && cardCategory == CardCategory.Offensive)
+            {
+                context.EffectsBlocked[playerIdx] = false;
+                Debug.LogWarning($"[Card] Player {activePlayer}'s '{cardName}' (Offensive) was blocked by Firewall!");
+                ActionLogManager.LogEffectBlocked(playerIdx, cardName);
+                return;
+            }
+
+            ActionLogManager.LogCardPlayed(playerIdx, cardName, description);
 
             if (effects != null)
             {
